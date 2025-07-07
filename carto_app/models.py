@@ -1,6 +1,7 @@
 from django.db import models
 import uuid
 
+# ✅ Modèle Serveur
 class Serveur(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=100)
@@ -11,6 +12,7 @@ class Serveur(models.Model):
     def __str__(self):
         return self.nom
 
+# ✅ Modèle Service Métier
 class ServiceMetier(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=100)
@@ -19,6 +21,7 @@ class ServiceMetier(models.Model):
     def __str__(self):
         return self.nom
 
+# ✅ Modèle Application
 class Application(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=100)
@@ -30,6 +33,7 @@ class Application(models.Model):
     def __str__(self):
         return self.nom
 
+# ✅ Modèle Base de Données
 class BaseDeDonnees(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=100)
@@ -41,6 +45,7 @@ class BaseDeDonnees(models.Model):
     def __str__(self):
         return self.nom
 
+# ✅ Modèle Interface
 class Interface(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=100)
@@ -52,6 +57,7 @@ class Interface(models.Model):
     def __str__(self):
         return f"{self.source_application} -> {self.cible_application} ({self.nom})"
 
+# ✅ Modèle AppServiceMetier (relation Many-to-Many entre Application et ServiceMetier)
 class AppServiceMetier(models.Model):
     application = models.ForeignKey(Application, on_delete=models.CASCADE)
     service_metier = models.ForeignKey(ServiceMetier, on_delete=models.CASCADE)
@@ -59,6 +65,7 @@ class AppServiceMetier(models.Model):
     class Meta:
         unique_together = ('application', 'service_metier')
 
+# ✅ Modèle Utilisateur
 class Utilisateur(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=100)

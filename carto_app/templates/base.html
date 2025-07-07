@@ -1,124 +1,116 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <title>{% block title %}Mon Application{% endblock %}</title>
-
-    <!-- Chart.js et Treemap (si besoin globalement) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap"></script>
-
-    <!-- vis-network (global) -->
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f5f6fa;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: #a5b1c2;
-            padding: 10px 20px;
-        }
-        .header-left { font-weight: bold; color: #2f3640; }
-        .header-center select {
-            padding: 5px 10px;
-            border-radius: 4px;
-            border: 1px solid #dcdde1;
-        }
-        .header-right button {
-            border: none;
-            padding: 8px 15px;
-            margin-left: 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .header-right .connect { background-color: #c23616; color: white; }
-        .header-right .refresh, .header-right .secondary {
-            background-color: #353b48;
-            color: white;
-        }
-        .container { display: flex; }
-        .sidebar {
-            width: 250px;
-            background: #fff;
-            border-right: 1px solid #dcdde1;
-            padding: 15px;
-        }
-        .sidebar h3 { margin-top: 0; color: #e84118; }
-        .sidebar label {
-            display: flex;
-            align-items: center;
-            margin: 10px 0 5px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .sidebar input[type="checkbox"] { margin-right: 8px; }
-        .sidebar ul { list-style: none; padding-left: 10px; }
-        .sidebar li { margin: 5px 0; }
-        .content { flex-grow: 1; padding: 20px; }
-    </style>
-
-    {% block extra_head %}{% endblock %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Cartographie SI{% endblock %}</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f6fa;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background-color: #2f3640;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      position: relative;
+    }
+    header h1 {
+      margin: 0;
+    }
+    .nav-buttons {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .nav-buttons a {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 5px 10px;
+      background-color: #e74c3c;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+    .nav-buttons a:hover {
+      background-color: #c0392b;
+    }
+    .content-container {
+      display: flex;
+      flex: 1;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #ecf0f1;
+      padding: 15px;
+      border-right: 1px solid #ccc;
+      overflow-y: auto;
+    }
+    .sidebar h3 {
+      margin-top: 0;
+      color: #e74c3c;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .sidebar li {
+      margin-bottom: 8px;
+    }
+    .sidebar input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    .main {
+      flex: 1;
+      padding: 20px;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="header">
-        <div class="header-left">Département d'Ille-et-Vilaine</div>
-        <div class="header-center">
-            <select onchange="if(this.value) window.location.href=this.value;">
-                <option value="" disabled selected>Choisir une page</option>
-                <option value="/">Cartographie des serveurs</option>
-                <option value="/sql">Requête SQL</option>
-                <option value="/visualisation/">Cartographie</option>
-                <option value="/toile/">Toile de dépendances</option>
-            </select>
-        </div>
-        <div class="header-right">
-            <button class="connect">Se connecter/connexion</button>
-            <button class="refresh" onclick="window.location.reload();">Rafraîchir</button>
-            <button class="secondary" onclick="window.history.back()">Retour</button>
-            <button class="secondary" onclick="window.location.href='/'">Accueil</button>
-        </div>
+  <header>
+    <h1>Cartographie SI</h1>
+    <div class="nav-buttons">
+      <a href="{% url 'impact_serveur' %}">Serveurs</a>
+      <a href="{% url 'requete_sql' %}">SQL</a>
+      <a href="{% url 'diagramme_applications' %}">Toile des dépendances</a>
+    </div>
+  </header>
+
+  <div class="content-container">
+    <div class="sidebar">
+      <h3>Liste des serveurs</h3>
+      <ul>
+        {% for srv in serveurs %}
+        <li>
+          <input type="checkbox" id="{{ srv.id }}">
+          <label for="{{ srv.id }}"><strong>{{ srv.nom }}</strong></label>
+          <ul>
+            <li>
+              <input type="checkbox" id="apps-{{ srv.id }}">
+              <label for="apps-{{ srv.id }}">Applications</label>
+            </li>
+            <li>
+              <input type="checkbox" id="services-{{ srv.id }}">
+              <label for="services-{{ srv.id }}">Services</label>
+            </li>
+          </ul>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
 
-    <div class="container">
-        <div class="sidebar">
-            <h3>Liste des serveurs</h3>
-            {% if serveurs %}
-                {% for srv in serveurs %}
-                    <label>
-                        <input type="checkbox" class="filter-server" value="{{ srv.id }}" />
-                        {{ srv.nom }}
-                    </label>
-                    <ul>
-                        <li>
-                            <label>
-                                <input type="checkbox" class="filter-app" data-server="{{ srv.id }}" />
-                                Applications
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="checkbox" class="filter-service" data-server="{{ srv.id }}" />
-                                Services
-                            </label>
-                        </li>
-                    </ul>
-                {% endfor %}
-            {% else %}
-                <p>Aucun serveur trouvé.</p>
-            {% endif %}
-        </div>
-
-        <div class="content">
-            {% block content %}{% endblock %}
-        </div>
+    <div class="main">
+      {% block content %}{% endblock %}
     </div>
+  </div>
 </body>
 </html>

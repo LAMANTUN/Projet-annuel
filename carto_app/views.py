@@ -1,8 +1,7 @@
 from django.shortcuts import render
-from django.db import connection 
-from .models import Serveur, Application, BaseDeDonnees, ServiceMetier, AppServiceMetier
+from django.db import connection
 from django.http import JsonResponse
-
+from .models import Serveur, Application, BaseDeDonnees, ServiceMetier, AppServiceMetier
 
 def impact_serveur(request):
     serveurs = Serveur.objects.all()
@@ -17,7 +16,7 @@ def impact_serveur(request):
             applications = Application.objects.filter(serveur=selected)
             bdds = BaseDeDonnees.objects.filter(serveur=selected)
         except Serveur.DoesNotExist:
-            pass
+            selected = None
 
     return render(request, "impact.html", {
         "serveurs": serveurs,
@@ -26,14 +25,11 @@ def impact_serveur(request):
         "bdds": bdds,
     })
 
-
 def requete_sql(request):
     result = []
     headers = []
     sql = ""
     error = None
-
-    # ✅ Récupération des serveurs pour affichage dans le template
     serveurs = Serveur.objects.all()
 
     if request.method == "POST":
@@ -54,19 +50,17 @@ def requete_sql(request):
         "headers": headers,
         "result": result,
         "error": error,
-        "serveurs": serveurs,  # ✅ Ajout de la variable serveurs au context
+        "serveurs": serveurs,
     })
-
 
 def visualisation(request):
     return render(request, "visualisation.html")
 
-
 def visualisation_data(request):
     serveur_filtre = request.GET.get("serveur")
     data = []
-
     serveurs = Serveur.objects.all()
+
     if serveur_filtre:
         serveurs = serveurs.filter(nom=serveur_filtre)
 
@@ -88,14 +82,11 @@ def visualisation_data(request):
 
     return JsonResponse(data, safe=False)
 
-
 def diagramme_applications(request):
     data = []
-
-    # ✅ Récupération des serveurs pour affichage dans le template
     serveurs = Serveur.objects.all()
-
     liens = AppServiceMetier.objects.select_related("application", "service_metier")
+
     for lien in liens:
         data.append({
             "application": lien.application.nom,
@@ -105,9 +96,8 @@ def diagramme_applications(request):
 
     return render(request, "diagramme.html", {
         "data": data,
-        "serveurs": serveurs,  # ✅ Ajout de la variable serveurs au context
+        "serveurs": serveurs,
     })
-
 
 def visualisation_arborescente(request):
     services = ServiceMetier.objects.prefetch_related(
@@ -115,7 +105,6 @@ def visualisation_arborescente(request):
         'appservicemetier_set__application__serveur'
     )
     return render(request, 'visualisation_arborescente.html', {'services': services})
-
 
 def data_hierarchique(request):
     data = []
@@ -143,10 +132,8 @@ def data_hierarchique(request):
 
     return JsonResponse({"name": "Système d'information", "children": data})
 
-
 def vue_arbre(request):
     return render(request, "arbre.html")
-
 
 def api_hierarchie(request):
     def build_tree():
@@ -169,3 +156,7 @@ def api_hierarchie(request):
         return {"name": "Système d'information", "children": result}
 
     return JsonResponse(build_tree())
+
+def liste_serveurs(request):
+    serveurs = Serveur.objects.all()
+    return render(request, "serveurs.html", {"serveurs": serveurs})
