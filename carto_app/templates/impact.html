@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Cartographie des serveurs{% endblock %}
+
+{% block content %}
+{% if selected %}
+    <h1 style="text-align:center; color:#2f3640;">Détails du serveur : {{ selected.nom }}</h1>
+
+    <div style="max-width:600px; margin:20px auto; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); padding:20px;">
+        <h2 style="color:#273c75;">Applications hébergées</h2>
+        {% if applications %}
+            <ul style="list-style:none; padding:0;">
+            {% for app in applications %}
+                <li style="padding:5px 0; border-bottom:1px solid #f1f2f6;">
+                    {{ app.nom }} - Version {{ app.version }}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>Aucune application installée.</p>
+        {% endif %}
+
+        <h2 style="color:#273c75; margin-top:30px;">Bases de données hébergées</h2>
+        {% if bdds %}
+            <ul style="list-style:none; padding:0;">
+            {% for bdd in bdds %}
+                <li style="padding:5px 0; border-bottom:1px solid #f1f2f6;">
+                    {{ bdd.nom }} ({{ bdd.type }})
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>Aucune base de données hébergée.</p>
+        {% endif %}
+    </div>
+{% else %}
+    <h1 style="text-align:center;">Analyse d'impact d'un serveur</h1>
+
+    <form method="get" style="text-align:center; margin:20px;">
+        <label for="serveur">Sélectionnez un serveur :</label>
+        <select name="serveur_id" id="serveur" onchange="this.form.submit()">
+            <option value="">-- Choisissez --</option>
+            {% for srv in serveurs %}
+                <option value="{{ srv.id }}" {% if selected and selected.id == srv.id %}selected{% endif %}>{{ srv.nom }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <p style="text-align:center;">Veuillez sélectionner un serveur dans la liste de gauche ou via le menu déroulant ci-dessus.</p>
+{% endif %}
+
+<div class="navigation" style="text-align:center; margin-top:30px;">
+    <button class="secondary" onclick="window.location.href='/'">Accueil</button>
+</div>
+{% endblock %}

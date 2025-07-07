@@ -1,0 +1,50 @@
+# 🌐 API Toile de dépendances (services ↔ apps ↔ serveurs)
+def api_toile_dependances(request):
+    """API JSON pour générer la toile de dépendances complète entre services, applications et serveurs."""
+    nodes_dict = {}
+    links = []
+
+    # 🔗 Ajouter tous les services
+    for service in ServiceMetier.objects.all():
+        nodes_dict[f"service-{service.id}"] = {
+            "id": f"service-{service.id}",
+            "label": service.nom,
+            "group": "service"
+        }
+
+        # 🔗 Pour chaque application liée
+        for asm in AppServiceMetier.objects.filter(service_metier=service).select_related('application'):
+            app = asm.application
+
+            # Application node
+            nodes_dict[f"app-{app.id}"] = {
+                "id": f"app-{app.id}",
+                "label": app.nom,
+                "group": "application"
+            }
+
+            # Lien service → application
+            links.append({
+                "source": f"service-{service.id}",
+                "target": f"app-{app.id}"
+            })
+
+            if app.serveur:
+                srv = app.serveur
+
+                # Serveur node
+                nodes_dict[f"serveur-{srv.id}"] = {
+                    "id": f"serveur-{srv.id}",
+                    "label": srv.nom,
+                    "group": "serveur"
+                }
+
+                # Lien application → serveur
+                links.append({
+                    "source": f"app-{app.id}",
+                    "target": f"serveur-{srv.id}"
+                })
+
+    # Retourne la liste des nodes uniques
+    nodes = list(nodes_dict.values())
+    return JsonResponse({"nodes": nodes, "links": links})

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Toile de dépendances{% endblock %}
+
+{% block content %}
+<h1>Toile de dépendances</h1>
+
+<!-- Conteneur pour le graph -->
+<div id="graph" style="width: 100%; height: 600px; border:1px solid #ccc;"></div>
+
+<!-- Inclure vis-network depuis CDN -->
+<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+<script>
+let network;  // variable globale pour la toile
+
+document.addEventListener("DOMContentLoaded", function() {
+    updateGraph();  // chargement initial
+
+    // Écoute des checkboxes (serveurs, apps, services)
+    document.querySelectorAll('.filter-server, .filter-app, .filter-service').forEach(cb => {
+        cb.addEventListener('change', updateGraph);
+    });
+});
+
+function updateGraph() {
+    // Récupérer les serveurs cochés
+    const checkedServers = Array.from(document.querySelectorAll('.filter-server:checked')).map(cb => cb.value);
+
+    // Récupérer les apps cochées
+    const checkedApps = Array.from(document.querySelectorAll('.filter-app:checked')).map(cb => cb.dataset.server);
+
+    // Récupérer les services cochés
+    const checkedServices = Array.from(document.querySelectorAll('.filter-service:checked')).map(cb => cb.dataset.server);
+
+    console.log("Serveurs cochés:", checkedServers);
+    console.log("Applications cochées:", checkedApps);
+    console.log("Services cochées:", checkedServices);
+
+    fetch('/api/toile_dependances/')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('graph');
+
+            // Filtrer les nodes selon les checkboxes
+            const filteredNodes = data.nodes.filter(n => {
+                if (n.group === "serveur") return checkedServers.includes(n.id.replace("serveur-", ""));
+                if (n.group === "application") return checkedApps.includes(n.id.replace("app-", ""));
+                if (n.group === "service") return checkedServices.includes(n.id.replace("service-", ""));
+                return false;
+            });
+
+            // Filtrer les liens également
+            const filteredLinks = data.links.filter(l =>
+                filteredNodes.find(n => n.id === l.source) &&
+                filteredNodes.find(n => n.id === l.target)
+            );
+
+            const nodes = new vis.DataSet(filteredNodes.map(n => ({
+                id: n.id,
+                label: n.label,
+                group: n.group
+            })));
+
+            const edges = new vis.DataSet(filteredLinks.map(l => ({
+                from: l.source,
+                to: l.target
+            })));
+
+            const networkData = { nodes: nodes, edges: edges };
+            const options = {
+                nodes: {
+                    shape: 'box'
+                },
+                groups: {
+                    service: { color: { background: '#f39c12' } },
+                    application: { color: { background: '#3498db' } },
+                    serveur: { color: { background: '#2ecc71' } }
+                },
+                physics: {
+                    stabilization: true
+                }
+            };
+
+            // Initialise ou met à jour la toile
+            if (network) {
+                network.setData(networkData);
+            } else {
+                network = new vis.Network(container, networkData, options);
+            }
+        })
+        .catch(error => console.error("Erreur lors du chargement des données:", error));
+}
+</script>
+{% endblock %}

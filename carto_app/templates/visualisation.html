@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Visualisation de la Toile{% endblock %}
+
+{% block content %}
+<h1>Toile de dépendances</h1>
+<div id="graph" style="width: 100%; height: 600px; border:1px solid #ccc;"></div>
+
+<script>
+  const container = document.getElementById('graph');
+  let network = null;
+
+  function updateGraph() {
+    const checkedServers = Array.from(document.querySelectorAll('input.filter-server:checked')).map(cb => cb.value);
+    const checkedApps = Array.from(document.querySelectorAll('input.filter-app:checked')).map(cb => cb.dataset.server);
+    const checkedServices = Array.from(document.querySelectorAll('input.filter-service:checked')).map(cb => cb.dataset.server);
+
+    fetch('/api/toile_dependances/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        servers: checkedServers,
+        apps: checkedApps,
+        services: checkedServices,
+      }),
+    })
+    .then(res => res.json())
+    .then(data => {
+      const nodes = new vis.DataSet(data.nodes);
+      const edges = new vis.DataSet(data.links);
+
+      const dataVis = { nodes, edges };
+      const options = {
+        nodes: { shape: 'box' },
+        groups: {
+          service: { color: { background: '#f39c12' } },
+          application: { color: { background: '#3498db' } },
+          serveur: { color: { background: '#2ecc71' } }
+        },
+        physics: { stabilization: true }
+      };
+
+      if (network) {
+        network.setData(dataVis);
+      } else {
+        network = new vis.Network(container, dataVis, options);
+      }
+    });
+  }
+
+  document.querySelectorAll('input.filter-server, input.filter-app, input.filter-service').forEach(el => {
+    el.addEventListener('change', updateGraph);
+  });
+
+  // Chargement initial
+  updateGraph();
+</script>
+{% endblock %}

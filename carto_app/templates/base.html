@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Mon Application{% endblock %}</title>
+
+    <!-- Chart.js et Treemap (si besoin globalement) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap"></script>
+
+    <!-- vis-network (global) -->
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f6fa;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #a5b1c2;
+            padding: 10px 20px;
+        }
+        .header-left { font-weight: bold; color: #2f3640; }
+        .header-center select {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #dcdde1;
+        }
+        .header-right button {
+            border: none;
+            padding: 8px 15px;
+            margin-left: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .header-right .connect { background-color: #c23616; color: white; }
+        .header-right .refresh, .header-right .secondary {
+            background-color: #353b48;
+            color: white;
+        }
+        .container { display: flex; }
+        .sidebar {
+            width: 250px;
+            background: #fff;
+            border-right: 1px solid #dcdde1;
+            padding: 15px;
+        }
+        .sidebar h3 { margin-top: 0; color: #e84118; }
+        .sidebar label {
+            display: flex;
+            align-items: center;
+            margin: 10px 0 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .sidebar input[type="checkbox"] { margin-right: 8px; }
+        .sidebar ul { list-style: none; padding-left: 10px; }
+        .sidebar li { margin: 5px 0; }
+        .content { flex-grow: 1; padding: 20px; }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">Département d'Ille-et-Vilaine</div>
+        <div class="header-center">
+            <select onchange="if(this.value) window.location.href=this.value;">
+                <option value="" disabled selected>Choisir une page</option>
+                <option value="/">Cartographie des serveurs</option>
+                <option value="/sql">Requête SQL</option>
+                <option value="/visualisation/">Cartographie</option>
+                <option value="/toile/">Toile de dépendances</option>
+            </select>
+        </div>
+        <div class="header-right">
+            <button class="connect">Se connecter/connexion</button>
+            <button class="refresh" onclick="window.location.reload();">Rafraîchir</button>
+            <button class="secondary" onclick="window.history.back()">Retour</button>
+            <button class="secondary" onclick="window.location.href='/'">Accueil</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>Liste des serveurs</h3>
+            {% if serveurs %}
+                {% for srv in serveurs %}
+                    <label>
+                        <input type="checkbox" class="filter-server" value="{{ srv.id }}" />
+                        {{ srv.nom }}
+                    </label>
+                    <ul>
+                        <li>
+                            <label>
+                                <input type="checkbox" class="filter-app" data-server="{{ srv.id }}" />
+                                Applications
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="checkbox" class="filter-service" data-server="{{ srv.id }}" />
+                                Services
+                            </label>
+                        </li>
+                    </ul>
+                {% endfor %}
+            {% else %}
+                <p>Aucun serveur trouvé.</p>
+            {% endif %}
+        </div>
+
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>

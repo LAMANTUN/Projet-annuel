@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Toile de dépendances{% endblock %}
+
+{% block content %}
+<h1>Toile de dépendances</h1>
+
+<!-- Conteneur du graph -->
+<div id="graph" style="width: 100%; height: 600px; border:1px solid #ccc;"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    function updateGraph() {
+        const checkedServers = Array.from(document.querySelectorAll('input.filter-server:checked')).map(el => el.value);
+        const checkedApps = Array.from(document.querySelectorAll('input.filter-app:checked')).map(el => el.dataset.server);
+        const checkedServices = Array.from(document.querySelectorAll('input.filter-service:checked')).map(el => el.dataset.server);
+
+        console.log("✅ UpdateGraph | Servers:", checkedServers, "Apps:", checkedApps, "Services:", checkedServices);
+
+        fetch('/api/toile_dependances/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                servers: checkedServers,
+                apps: checkedApps,
+                services: checkedServices
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('graph');
+
+            const nodes = new vis.DataSet(data.nodes.map(n => ({
+                id: n.id,
+                label: n.label,
+                group: n.group
+            })));
+
+            const edges = new vis.DataSet(data.links.map(l => ({
+                from: l.source,
+                to: l.target
+            })));
+
+            const networkData = { nodes: nodes, edges: edges };
+            const options = {
+                nodes: { shape: 'box' },
+                groups: {
+                    service: { color: { background: '#f39c12' } },
+                    application: { color: { background: '#3498db' } },
+                    serveur: { color: { background: '#2ecc71' } }
+                },
+                physics: { stabilization: true }
+            };
+
+            new vis.Network(container, networkData, options);
+        });
+    }
+
+    // Chargement initial
+    updateGraph();
+
+    // Attache à la fonction globale si besoin dans base.html
+    window.updateGraph = updateGraph;
+});
+</script>
+{% endblock %}

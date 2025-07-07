@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Requête SQL{% endblock %}
+
+{% block extra_head %}
+<style>
+    h1 {
+        text-align: center;
+        color: #2f3640;
+    }
+
+    form {
+        max-width: 800px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #dcdde1;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 14px;
+        resize: vertical;
+    }
+
+    button {
+        background-color: #273c75;
+        color: white;
+        padding: 10px 20px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #192a56;
+    }
+
+    table {
+        border-collapse: collapse;
+        margin: 30px auto;
+        width: 90%;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+        border: 1px solid #dcdde1;
+        padding: 8px 12px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #718093;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f1f2f6;
+    }
+
+    p {
+        text-align: center;
+        font-weight: bold;
+    }
+
+    p.error {
+        color: red;
+    }
+</style>
+
+<script>
+    function confirmExecution(event) {
+        const confirmation = confirm("⚠️ Confirmez-vous l'exécution de cette requête SQL ?");
+        if (!confirmation) {
+            event.preventDefault();
+        }
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>Interface SQL (lecture seule)</h1>
+
+<form method="post" onsubmit="confirmExecution(event)">
+    {% csrf_token %}
+    <textarea name="sql" rows="5" cols="100">{{ sql }}</textarea><br>
+    <button type="submit">Exécuter</button>
+</form>
+
+{% if error %}
+    <p class="error">Erreur : {{ error }}</p>
+{% endif %}
+
+{% if headers %}
+    <table>
+        <thead>
+            <tr>{% for header in headers %}<th>{{ header }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+            {% for row in result %}
+            <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}
