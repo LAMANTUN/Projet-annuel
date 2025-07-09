@@ -6,7 +6,11 @@ while ! nc -z db 5432; do
 done
 
 echo "✅ Base PostgreSQL accessible. Lancement des migrations..."
+python manage.py makemigrations
 python manage.py migrate
+
+echo "📦 Chargement des données de test (si non chargées)..."
+python manage.py loaddata test_data_fixture.json || echo "⚠️  Données déjà chargées ou fichier manquant"
 
 echo "👤 Création du superutilisateur si nécessaire..."
 python manage.py createsuperuser --noinput || true
