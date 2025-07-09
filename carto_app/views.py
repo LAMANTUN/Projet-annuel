@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.db import connection
 from django.http import JsonResponse
-from .models import Serveur, Application, BaseDeDonnees, ServiceMetier, AppServiceMetier
+from .models import Serveur, Application, BaseDeDonnees, ServiceMetier, AppServiceMetier, Interface
 
 def impact_serveur(request):
     serveurs = Serveur.objects.all()
@@ -160,3 +160,44 @@ def api_hierarchie(request):
 def liste_serveurs(request):
     serveurs = Serveur.objects.all()
     return render(request, "serveurs.html", {"serveurs": serveurs})
+
+def get_visualisation_data(request):
+    def build_application_node(app):
+        # Récupérer services métiers
+        services = ServiceMetier.objects.filter(appservicemetier__application=app)
+        services_nodes = [
+            {"name": f"Service : {s.nom}", "type": "service_metier"} for s in services
+        ]
+
+        # Récupérer bases de données
+        bdd_nodes = [
+            {"name": f"BDD : {bdd.nom}", "type": "bdd"}
+            for bdd in app.bases.all()
+        ]
+
+        # Récupérer interfaces (vers autres apps)
+        interfaces = Interface.objects.filter(source_application=app)
+        interfaces_nodes = [
+            {"name": f"Interface → {i.cible_application.nom}", "type": "interface"}
+            for i in interfaces
+        ]
+
+        children = bdd_nodes + services_nodes + interfaces_nodes
+
+        return {
+            "name": f"App : {app.nom}",
+            "type": "application",
+            "children": children
+        }
+
+    data = []
+    for serveur in Serveur.objects.prefetch_related('applications__bases'):
+        apps_nodes = [build_application_node(app) for app in serveur.applications.all()]
+        serveur_node = {
+            "name": f"Serveur : {serveur.nom}",
+            "type": "serveur",
+            "children": apps_nodes
+        }
+        data.append(serveur_node)
+
+    return JsonResponse({"name": "Système d'information", "type": "root", "children": data})

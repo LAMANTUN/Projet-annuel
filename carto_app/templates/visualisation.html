@@ -5,8 +5,105 @@
 {% block content %}
   <h2 style="text-align:center; font-weight:bold;">Visualisation du système d'information</h2>
 
-  <!-- 🔧 Place ici ton contenu de visualisation -->
-  <div style="text-align:center; margin-top:20px;">
-    <p>Contenu de la visualisation ici (graph, canvas, tableau...)</p>
+  <!-- ✅ Filtres -->
+  <div style="text-align:center; margin: 20px 0;">
+    <label><input type="checkbox" class="type-toggle" value="serveur" checked> Serveurs</label>
+    <label><input type="checkbox" class="type-toggle" value="application" checked> Applications</label>
+    <label><input type="checkbox" class="type-toggle" value="bdd" checked> Bases de données</label>
+    <label><input type="checkbox" class="type-toggle" value="interface" checked> Interfaces</label>
+    <label><input type="checkbox" class="type-toggle" value="service_metier" checked> Services métiers</label>
   </div>
+
+  <!-- Zone du graphe D3 -->
+  <div id="graph-container" style="width:100%; height:700px; border:1px solid #ccc; margin-top:30px;"></div>
+
+  <!-- Script D3.js -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const width = document.getElementById("graph-container").clientWidth;
+    const height = 1000;
+
+    const svgElement = d3.select("#graph-container")
+      .append("svg")
+      .attr("viewBox", [0, 0, width, height])
+      .attr("preserveAspectRatio", "xMinYMin meet")
+      .attr("width", width)
+      .attr("height", height)
+      .call(d3.zoom().on("zoom", function (event) {
+        g.attr("transform", event.transform);
+      }));
+
+    const g = svgElement.append("g");
+
+    const treeLayout = d3.tree().nodeSize([180, 120]);
+
+    d3.json("{% url 'visualisation_graph_data' %}").then(data => {
+      const root = d3.hierarchy(data);
+      treeLayout(root);
+
+      const links = g.selectAll("path.link")
+        .data(root.links())
+        .join("path")
+        .attr("class", "link")
+        .attr("fill", "none")
+        .attr("stroke", "#ccc")
+        .attr("stroke-width", 2)
+        .attr("d", d3.linkVertical()
+          .x(d => d.x)
+          .y(d => d.y)
+        );
+
+      const nodes = g.selectAll("g.node")
+        .data(root.descendants())
+        .join("g")
+        .attr("class", d => `node ${d.data.type}`)
+        .attr("transform", d => `translate(${d.x},${d.y})`);
+
+      nodes.append("rect")
+        .attr("x", -80)
+        .attr("y", -12)
+        .attr("rx", 6)
+        .attr("ry", 6)
+        .attr("width", 160)
+        .attr("height", 24)
+        .attr("fill", d => {
+          switch (d.data.type) {
+            case "serveur": return "#1f77b4";
+            case "application": return "#2ca02c";
+            case "bdd": return "#d62728";
+            case "service_metier": return "#9467bd";
+            case "interface": return "#ff7f0e";
+            default: return "#999";
+          }
+        });
+
+      nodes.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "0.35em")
+        .attr("fill", "#fff")
+        .style("font-size", "13px")
+        .text(d => d.data.name);
+
+      // ✅ Filtres dynamiques
+      function updateVisibility() {
+        const activeTypes = Array.from(document.querySelectorAll('.type-toggle:checked'))
+          .map(el => el.value);
+
+        g.selectAll("g.node")
+          .style("display", d => activeTypes.includes(d.data.type) ? "block" : "none");
+
+        g.selectAll("path.link")
+          .style("display", d =>
+            activeTypes.includes(d.source.data.type) && activeTypes.includes(d.target.data.type)
+              ? "block" : "none"
+          );
+      }
+
+      updateVisibility();
+
+      document.querySelectorAll('.type-toggle').forEach(input => {
+        input.addEventListener('change', updateVisibility);
+      });
+    });
+  </script>
 {% endblock %}
