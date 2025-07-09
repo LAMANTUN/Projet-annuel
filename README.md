@@ -48,22 +48,6 @@ docker-compose up --build
 
 ---
 
-## 🛠️ Commandes utiles (dans le conteneur `web`)
-
-```bash
-# Accéder au conteneur web
-docker-compose exec web bash
-
-# Créer les migrations (si modèles modifiés)
-python manage.py makemigrations
-python manage.py migrate
-
-# Charger des données d'exemple
-python manage.py loaddata test_data_fixture.json
-```
-
----
-
 ## 🧪 Interface de test
 
 - **Page d'analyse d'impact** : [http://localhost:8000/](http://localhost:8000/)
