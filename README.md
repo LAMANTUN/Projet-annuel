@@ -37,8 +37,8 @@ Ce projet permet de visualiser de manière interactive les composants du systèm
 
 ```bash
 # 1. Cloner le projet
-git clone https://github.com/moncompte/cartographie-si.git
-cd cartographie-si
+git clone https://github.com/LAMANTUN/Projet-annuel
+cd Projet-annuel
 
 # 2. Lancer le projet
 docker-compose up --build
